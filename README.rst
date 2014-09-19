@@ -25,6 +25,13 @@ dev
    (confu)$ pip install -e .[tests]
    (confu)$ py.test tests/ --cov=confu
 
+install
+-------
+
+.. code:: bash
+
+   $ pip install con-fu
+
 shell
 -----
 

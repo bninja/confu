@@ -11,7 +11,7 @@ extras_require = {
 }
 
 setuptools.setup(
-    name='confu',
+    name='con-fu',
     version=(
         re
         .compile(r".*__version__ = '(.*?)'", re.S)

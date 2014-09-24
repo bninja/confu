@@ -10,7 +10,6 @@ from __future__ import unicode_literals, absolute_import
 import collections
 import json
 
-import ansible.utils
 import boto.provider
 import boto.s3
 import click
@@ -394,6 +393,9 @@ class S3LookupModule(object):
         self.basedir = basedir
 
     def run(self, terms, inject=None, **kwargs):
+        # XXX: messes with logging
+        import ansible.utils
+
         # XXX: https://github.com/ansible/ansible/issues/7370
 
         terms = ansible.utils.listify_lookup_plugin_terms(terms, self.basedir, inject)

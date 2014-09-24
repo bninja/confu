@@ -47,7 +47,6 @@ def logging_at(level=logging.ERROR):
         format='%(asctime)s : %(levelname)s : %(name)s : %(message)s',
         stream=sys.stderr,
     )
-    logging.getLogger().setLevel(level)
 
 
 from . import settings

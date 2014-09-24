@@ -32,6 +32,91 @@ install
 
    $ pip install con-fu
 
+
+settings
+--------
+
+Read and merged from these ``ini`` files:
+
+- ``~/.confu.cfg``
+- ``.confu.cfg``
+
+and these environment variables:
+
+- ``CONFU_PROFILE``
+- ``CONFU_REGION``
+- ``CONFU_LOG``
+
+To see what they are:
+
+.. code:: bash
+
+   $ confu cfg
+   {
+       "atlas": {
+           "source_dir": "infras/global/atlas"
+       }, 
+       "aws": {
+           "default_region": "us-west-1", 
+           "regions": [
+               "us-west-1"
+           ]
+       }, 
+       "cfn": {
+           "bucket_format": "{profile}-confu-cfn-{region}", 
+           "bucket_key": "vault", 
+           "parameters": {
+               "ConfName": "infra-vault", 
+               "ConfSource": "{profile}-confu-pkg", 
+               "InfraSilo": "vault", 
+               "KeyName": "ai-gazelle", 
+               "LogArchiveBucket": "{profile}-confu-log"
+           }, 
+           "stack_name_format": "{Prefix}-{AppEnv}-{random}", 
+           "stack_tags": {
+               "infra-silo": "vault"
+           }
+       }, 
+       "pkg": {
+           "bucket_format": "{profile}-{region}-confu-pkg", 
+           "default_includes": [
+               "group_vars/", 
+               "host_vars/", 
+               "roles/", 
+               "/ansible.cfg", 
+               "!*/ansible.cfg", 
+               "*.yml", 
+               "!.project", 
+               "!*.git", 
+               "!*.pyc", 
+               "!*.pyo", 
+               "!*.git*", 
+               "!*.travis.yml", 
+               "!*.md", 
+               "!Vagrantfile", 
+               "!*/test/", 
+               "!test.yml"
+           ], 
+           "includes": [
+               "infras/", 
+               "!infras/global/mq.yml", 
+               "!infras/global/site.yml", 
+               "!infras/global/.confu.cfg", 
+               "!infras/global/inventories/", 
+               "!infras/global/formations/", 
+               "!infras/global/roles/", 
+               "inventories/", 
+               "ops/"
+           ], 
+           "name": "{source.dir_name}", 
+           "source_dir": "./", 
+           "stage_dir": "/tmp/confu/{package.name}-{package.version}", 
+           "version": "{source.git_version}"
+       }, 
+       "profile": "julius", 
+       "region": "us-west-1"
+   }
+
 shell
 -----
 
@@ -69,10 +154,10 @@ like this:
    CONFU_PROFILE=
    CONFU_REGION=
    CONFU_LOG=
-   $ confue ppw1
+   $ confue jj-us-w1
    $ confue -p julius -r us-west-1 -l i
    $ confue
-   CONFUE_NAME=ppw1
+   CONFUE_NAME=jj-us-w1
    CONFU_PROFILE=julius
    CONFU_REGION=us-west-1
    CONFU_LOG=i
@@ -83,4 +168,4 @@ like this:
    CONFU_REGION=
    CONFU_LOG=
    $ confue ls
-   ppw1
+   jj-us-w1

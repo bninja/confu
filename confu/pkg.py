@@ -407,11 +407,11 @@ clean: dist-clean
 @click.pass_context
 def pkg(ctx, name, version, source_dir, bucket):
     ctx.package = Package(
-       source_dir=source_dir or settings.pkg.source_dir,
-       name=name or settings.pkg.name,
-       version=version or settings.pkg.version,
-       patterns=settings.pkg.includes + settings.pkg.default_includes,
-       bucket_format=bucket or settings.pkg.bucket_format
+        source_dir=source_dir or settings.pkg.source_dir,
+        name=name or settings.pkg.name,
+        version=version or settings.pkg.version,
+        patterns=settings.pkg.includes + settings.pkg.default_includes,
+        bucket_format=bucket or settings.pkg.bucket_format
     )
 
 
@@ -420,9 +420,9 @@ def pkg(ctx, name, version, source_dir, bucket):
 def info(ctx):
     package = ctx.parent.package
     info = {
-       'name': package.name,
-       'version': package.version,
-       'source': {
+        'name': package.name,
+        'version': package.version,
+        'source': {
             'dir': package.source.dir,
         },
         'patterns': map(unicode, package.patterns),
@@ -444,9 +444,9 @@ def manifest(ctx):
         print path
 
 
-@pkg.command('deps')
+@pkg.command('init')
 @click.pass_context
-def deps(ctx):
+def init(ctx):
     ctx.parent.package.install_deps()
 
 
@@ -468,7 +468,6 @@ def build(ctx):
 @pkg.command('clean')
 @click.pass_context
 def clean(ctx):
-    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
     sys.exit(ctx.parent.package.makefile.run('clean'))
 

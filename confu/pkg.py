@@ -150,6 +150,9 @@ class Package(object):
         """Install dependency roles
 
         """
+        if os.path.exists('ansible-requirements.yml'):
+            logger.info('ansible-requirements.yml does not exist')
+            return
         logger.info('installing dependency roles')
         subprocess.check_call([
             'ansible-galaxy', 'install',
@@ -453,14 +456,12 @@ def init(ctx):
 @pkg.command('stage')
 @click.pass_context
 def stage(ctx):
-    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
 
 
 @pkg.command('build')
 @click.pass_context
 def build(ctx):
-    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
     sys.exit(ctx.parent.package.makefile.run('all'))
 

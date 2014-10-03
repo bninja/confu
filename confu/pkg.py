@@ -146,6 +146,21 @@ class Package(object):
     def makefile(self):
         return Makefile(self)
 
+    def install_deps(self):
+        """Install dependency roles
+
+        """
+        if not os.path.exists('ansible-requirements.yml'):
+            logger.info('ansible-requirements.yml does not exist')
+            return
+        logger.info('installing dependency roles')
+        subprocess.check_call([
+            'ansible-galaxy', 'install',
+            '-r', 'ansible-requirements.yml',
+            '-p', '.',
+            '--force',
+        ])
+
     def stage(self):
         if not os.path.exists(self.stage_dir):
             logger.info('creating  stage dir %s', self.stage_dir)
@@ -395,11 +410,11 @@ clean: dist-clean
 @click.pass_context
 def pkg(ctx, name, version, source_dir, bucket):
     ctx.package = Package(
-       source_dir=source_dir or settings.pkg.source_dir,
-       name=name or settings.pkg.name,
-       version=version or settings.pkg.version,
-       patterns=settings.pkg.includes + settings.pkg.default_includes,
-       bucket_format=bucket or settings.pkg.bucket_format
+        source_dir=source_dir or settings.pkg.source_dir,
+        name=name or settings.pkg.name,
+        version=version or settings.pkg.version,
+        patterns=settings.pkg.includes + settings.pkg.default_includes,
+        bucket_format=bucket or settings.pkg.bucket_format
     )
 
 
@@ -408,9 +423,9 @@ def pkg(ctx, name, version, source_dir, bucket):
 def info(ctx):
     package = ctx.parent.package
     info = {
-       'name': package.name,
-       'version': package.version,
-       'source': {
+        'name': package.name,
+        'version': package.version,
+        'source': {
             'dir': package.source.dir,
         },
         'patterns': map(unicode, package.patterns),
@@ -430,6 +445,12 @@ def makefile(ctx):
 def manifest(ctx):
     for path in ctx.parent.package.manifest:
         print path
+
+
+@pkg.command('init')
+@click.pass_context
+def init(ctx):
+    ctx.parent.package.install_deps()
 
 
 @pkg.command('stage')

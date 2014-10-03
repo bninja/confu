@@ -146,6 +146,18 @@ class Package(object):
     def makefile(self):
         return Makefile(self)
 
+    def install_deps(self):
+        """Install dependency roles
+
+        """
+        logger.info('installing dependency roles')
+        subprocess.check_call([
+            'ansible-galaxy', 'install',
+            '-r', 'ansible-requirements.yml',
+            '-p', '.',
+            '--force',
+        ])
+
     def stage(self):
         if not os.path.exists(self.stage_dir):
             logger.info('creating  stage dir %s', self.stage_dir)
@@ -432,15 +444,23 @@ def manifest(ctx):
         print path
 
 
+@pkg.command('deps')
+@click.pass_context
+def deps(ctx):
+    ctx.parent.package.install_deps()
+
+
 @pkg.command('stage')
 @click.pass_context
 def stage(ctx):
+    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
 
 
 @pkg.command('build')
 @click.pass_context
 def build(ctx):
+    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
     sys.exit(ctx.parent.package.makefile.run('all'))
 
@@ -448,6 +468,7 @@ def build(ctx):
 @pkg.command('clean')
 @click.pass_context
 def clean(ctx):
+    ctx.parent.package.install_deps()
     ctx.parent.package.stage()
     sys.exit(ctx.parent.package.makefile.run('clean'))
 

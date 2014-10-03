@@ -150,7 +150,7 @@ class Package(object):
         """Install dependency roles
 
         """
-        if os.path.exists('ansible-requirements.yml'):
+        if not os.path.exists('ansible-requirements.yml'):
             logger.info('ansible-requirements.yml does not exist')
             return
         logger.info('installing dependency roles')

@@ -16,6 +16,7 @@ and exposed like:
 
 """
 from __future__ import unicode_literals
+from collections import OrderedDict
 
 import errno
 import fnmatch
@@ -36,6 +37,7 @@ import boto.s3.key
 import click
 
 from . import settings, cli, aws
+from troposphere import awsencode
 
 
 logger = logging.getLogger(__name__)
@@ -154,7 +156,35 @@ class Template(object):
         return ctx.url_for(key, auth=auth)
 
     def __str__(self):
-        return json.dumps(self.body, indent=4, sort_keys=True)
+        json_repr = self.body
+        # follow AWSCloudFormation/latest/UserGuide/template-anatomy.html
+        # to print out the template
+        sorted_keys = [
+            'AWSTemplateFormatVersion',
+            'Description',
+            'Parameters',
+            'Mappings',
+            'Conditions',
+            'Resources',
+            'Properties',
+            'Function',
+            'Outputs',
+        ]
+
+        def comparator(rhs, lhs):
+            rhs_idx = sorted_keys.index(rhs)
+            lhs_idx = sorted_keys.index(lhs)
+            return -1 if rhs_idx < lhs_idx else lhs_idx
+
+        t = OrderedDict(sorted(json_repr.items(),
+                               key=lambda x: x[0],
+                               cmp=comparator))
+
+        return json.dumps(t,
+                          cls=awsencode,
+                          indent=4,
+                          sort_keys=False,
+                          separators=(', ', ': '))
 
     def stack(self, name, params):
         return Stack.create(name, self, params)

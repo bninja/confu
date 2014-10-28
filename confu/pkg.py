@@ -375,13 +375,24 @@ clean: dist-clean
         self.package = package
 
     def render(self):
+
+        def find_executable(name):
+            # if invoked from an interpreter w/o fiddling w/ path,
+            # try to search distribution first, then fallback to default
+            for search_path in [os.path.dirname(sys.executable), None]:
+                executable = distutils.spawn.find_executable(name,
+                                                             path=search_path)
+                if executable:
+                    return executable
+            raise IOError(errno.ENOENT, 'No such file or directory', name)
+
         return self.template.substitute(
             name=self.package.name,
             version=self.package.version,
             source_dir=self.package.source.dir,
             stage_dir=self.package.stage_dir,
-            virtualenv_bin=distutils.spawn.find_executable('virtualenv'),
-            virtualenv_relocate_bin=distutils.spawn.find_executable('virtualenv-relocate'),
+            virtualenv_bin=find_executable('virtualenv'),
+            virtualenv_relocate_bin=find_executable('virtualenv-relocate')
         )
 
     def __unicode__(self):

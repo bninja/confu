@@ -379,11 +379,12 @@ clean: dist-clean
         def find_executable(name):
             # if invoked from an interpreter w/o fiddling w/ path,
             # try to search distribution first, then fallback to default
-            py_interp_path = os.path.dirname(sys.executable)
-            item = distutils.spawn.find_executable(name, path=py_interp_path)
-            if item:
-                return item
-            return distutils.spawn.find_executable(name)
+            for search_path in [os.path.dirname(sys.executable), None]:
+                executable = distutils.spawn.find_executable(name,
+                                                             path=search_path)
+                if executable:
+                    return executable
+            raise IOError(errno.ENOENT, 'No such file or directory', name)
 
         return self.template.substitute(
             name=self.package.name,

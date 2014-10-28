@@ -380,8 +380,12 @@ clean: dist-clean
             version=self.package.version,
             source_dir=self.package.source.dir,
             stage_dir=self.package.stage_dir,
-            virtualenv_bin=distutils.spawn.find_executable('virtualenv'),
-            virtualenv_relocate_bin=distutils.spawn.find_executable('virtualenv-relocate'),
+            virtualenv_bin=distutils.spawn.find_executable(
+                'virtualenv',
+                path=os.path.dirname(sys.executable)),
+            virtualenv_relocate_bin=distutils.spawn.find_executable(
+                'virtualenv-relocate',
+                path=os.path.dirname(sys.executable)),
         )
 
     def __unicode__(self):

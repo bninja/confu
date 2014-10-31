@@ -284,7 +284,7 @@ class AWSRemoteInventory(AWSInventory):
     # AWSLocalInventory
 
     def host_for(self, instance):
-        return instance.private_ip_address
+        return instance.ip_address or instance.private_ip_address
 
     def instance_for(self, host):
         instances = list(self.instances.filter(('private_ip_address', host)))
@@ -444,18 +444,21 @@ class S3LookupModule(object):
                 except (boto.exception.BotoClientError, boto.exception.S3ResponseError), e:
                     raise ansible.errors.AnsibleError('Unable to connect to s3')
 
-            # bucket
+            # read
+            # NOTE: lookup deferred (validate=False) so we don't need s3:List* permission
+            bucket = cxn.get_bucket(options['bucket'], validate=False)
+            key = boto.s3.key.Key(bucket, key_name)
             try:
-                bucket = cxn.get_bucket(options['bucket'])
-            except boto.exception.S3ResponseError, e:
-                raise ansible.errors.AnsibleError('Unable to get bucket %s' % options['bucket'])
-
-            # key
-            try:
-                key = boto.s3.key.Key(bucket, key_name)
                 contents = key.get_contents_as_string()
             except boto.exception.S3ResponseError, e:
-                raise ansible.errors.AnsibleError('Unable to read bucket %s key %s' % (options['bucket'], key_name))
+                raise ansible.errors.AnsibleError(
+                    'Unable to get s3://{bucket}/{key} contents - {code}, {message}'.format(
+                        bucket=options['bucket'],
+                        key=key_name,
+                        code=e.error_code,
+                        message=e.message,
+                    )
+                )
 
             # cache
             if self.cache is not None:

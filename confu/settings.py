@@ -143,8 +143,7 @@ atlas = Atlas()
 
 
 def locations():
-    return filter(
-        lambda path: os.path.exists(path), [
+    return filter(lambda path: os.path.exists(path), [
         os.path.expanduser('~/.confu.cfg'),
         os.path.join(os.getcwd(), '.confu.cfg'),
     ])

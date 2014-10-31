@@ -273,7 +273,12 @@ class Stack(object):
             (name, param['Default'])
             for name, param in template.defaults.iteritems()
         )
+        name_ctx.update(
+            (name, value)
+            for name, value in settings.cfn.parameters.iteritems()
+        )
         name_ctx.update(params)
+        logger.debug('"%s".format(%s)', name, name_ctx)
         name = name.format(**name_ctx)
 
         # validate params

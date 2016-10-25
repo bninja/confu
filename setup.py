@@ -27,7 +27,7 @@ setuptools.setup(
     packages=setuptools.find_packages('.', exclude=('tests', 'tests.*')),
     platforms='any',
     install_requires=[
-        'ansible',
+        'ansible >= 2,<3',
         'boto',
         'troposphere',
         'click',

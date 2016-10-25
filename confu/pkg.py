@@ -44,8 +44,6 @@ or use them to build distribution packages (e.g. RPMs, DEBs).
     architecture, etc) so target machines to configure need to be similar.
 
 """
-from __future__ import unicode_literals
-
 import distutils
 import errno
 import fnmatch

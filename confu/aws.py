@@ -1,6 +1,8 @@
 import collections
 import datetime
+import json
 import threading
+import time
 
 import boto.cloudformation
 import boto.iam
@@ -155,6 +157,12 @@ def this_instance():
     return instances[0]
 
 
+def this_region():
+    identity = boto.utils.get_instance_identity()
+    region_name = identity['document']['region']
+    return region_name
+
+
 def get_s3_bucket(name, region=None, create=False):
     try:
         return cxn.s3(region).get_bucket(name)
@@ -181,3 +189,50 @@ def url_for_s3_key(key, auth=False):
         bucket=key.bucket.name,
         key=key.name,
     )
+
+
+def is_stack_resource(resource):
+    return (
+        'aws:cloudformation:stack-name' in resource.tags and
+        'aws:cloudformation:logical-id' in resource.tags
+    )
+
+
+def describe_stack_resource(resource):
+    return cxn.cloudformation().describe_stack_resource(
+        resource.tags['aws:cloudformation:stack-name'],
+        resource.tags['aws:cloudformation:logical-id']
+    )
+
+
+def stack_resource_metadata(resource, *args):
+    result = (
+        describe_stack_resource(resource)
+        ['DescribeStackResourceResponse']
+        ['DescribeStackResourceResult']
+        ['StackResourceDetail']
+    )
+    v = result.get('Metadata', *args)
+    if isinstance(v, basestring):
+        v = json.loads(result['Metadata'])
+    return v
+
+
+def retry(sleep=1, max_sleep=60, max_count=10):
+    """
+    https://github.com/ansible/ansible-modules-core/blob/7fb0605824df897548e5cd3fd00789365c8f20df/cloud/amazon/ec2_elb_lb.py#L404
+    """
+
+    def _loop(func, *args, **kwargs):
+        count = 0
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except boto.exception.BotoServerError, ex:
+                if ex.code != 'Throttling' or count == max_count:
+                    raise
+                cur_sleep = min(max_sleep, sleep * (2 ** count))
+                time.sleep(cur_sleep)
+                count += 1
+
+    return _loop

@@ -5,7 +5,7 @@ Ansible helpers for:
 - `lookup plugins <http://docs.ansible.com/developing_plugins.html#lookup-plugins>`_
 
 """
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
 
 import collections
 import json
@@ -13,6 +13,7 @@ import json
 import boto.provider
 import boto.s3
 import click
+import yaml
 
 from . import logging_at, aws
 
@@ -88,6 +89,9 @@ class AWSInventory(Inventory):
     def instance_for(self, host):
         raise NotImplementedError
 
+    def host_vars(self, instance):
+        raise NotImplementedError
+
     def group_tag(self, tag):
         name, munge, var = None, None, None
         if isinstance(tag, basestring):
@@ -118,8 +122,12 @@ class AWSInventory(Inventory):
 
         groups[self.account_alias]['vars']['aws_account'] = self.account_alias
 
+        host_vars = {}
         for instance in self.instances:
             host = self.host_for(instance)
+            vars_ = self.host_vars(instance)
+            if vars_:
+                host_vars[host] = vars_
 
             # account
             groups[self.account_alias]['children'].add(instance.region.name)
@@ -127,7 +135,9 @@ class AWSInventory(Inventory):
 
             # region
             groups[instance.region.name]['hosts'].add(host)
-            groups[instance.region.name]['vars']['aws_region'] = instance.region.name
+            groups[instance.region.name]['vars']['aws_region'] = (
+                instance.region.name
+            )
 
             # region placement
             groups[instance.region.name]['children'].add(instance.placement)
@@ -146,7 +156,9 @@ class AWSInventory(Inventory):
                 elif isinstance(group_names, list):
                     group_names = group_name
                 else:
-                    raise TypeError('Tag "{0}" munge must return string or strings')
+                    raise TypeError(
+                        'Tag "{0}" munge must return string or strings'
+                    )
                 for group_name in group_names:
                     groups[group_name]['hosts'].add(host)
                     if var:
@@ -169,14 +181,14 @@ class AWSInventory(Inventory):
                 result[name] = dict(group)
 
         result['_meta'] = {
-            'hostvars': {}
+            'hostvars': host_vars
         }
 
         return result
 
     def one(self, host):
-        self.instance_for(host)
-        return {}
+        instance = self.instance_for(host)
+        return self.host_vars(instance) or {}
 
 
 class AWSLocalInventory(AWSInventory):
@@ -212,7 +224,7 @@ class AWSLocalInventory(AWSInventory):
             group_tags=group_tags,
         )
 
-    # AWSLocalInventory
+    # AWSInventory
 
     def host_for(self, instance):
         return '127.0.0.1'
@@ -221,6 +233,9 @@ class AWSLocalInventory(AWSInventory):
         if '127.0.0.1' == host:
             return self.instances[0]
         raise LookupError('No instances for host "{0}"'.format(host))
+
+    def host_vars(self, instance, default=None):
+        return default
 
     # Inventory
 
@@ -271,15 +286,28 @@ class AWSRemoteInventory(AWSInventory):
 
     """
 
-    def __init__(self, instances, account_alias=None, group_tags=None):
+    def __init__(
+            self,
+            instances,
+            account_alias=None,
+            group_tags=None,
+            vars_metadata_key=None,
+            vars_metadata_type=None):
         super(AWSRemoteInventory, self).__init__(
             instances,
             account_alias=account_alias,
             group_tags=group_tags,
         )
+        self.vars_metadata_key = vars_metadata_key
+        self.vars_metadata_type = vars_metadata_type
 
     def filter(self, *regions):
         self.instances = self.instances.regions(*regions)
+
+    vars_metadata_types = {
+        'application/json': json.loads,
+        'application/x-yaml': yaml.load,
+    }
 
     # AWSLocalInventory
 
@@ -289,10 +317,53 @@ class AWSRemoteInventory(AWSInventory):
     def instance_for(self, host):
         instances = list(self.instances.filter(('private_ip_address', host)))
         if not instances:
-            raise LookupError('No instances for host "{0}"'.format(host))
+            instances = list(self.instances.filter(('ip_address', host)))
+            if not instances:
+                raise LookupError('No instances for host "{0}"'.format(host))
         if len(instances) > 1:
             raise Exception('Multiple instances for host "{0}"'.format(host))
         return instances[0]
+
+    def host_vars(self, instance, default=None):
+        if not aws.is_stack_resource(instance):
+            return default
+        host = self.host_for(instance)
+        md = aws.retry()(aws.stack_resource_metadata, instance, None)
+        if md is None:
+            return default
+        vars_ = md
+        if self.vars_metadata_key:
+            for k in self.vars_metadata_key:
+                if k not in vars_:
+                    return default
+                vars_ = vars_[k]
+        if isinstance(vars_, basestring):
+            text_vars = vars_
+            if self.vars_metadata_type not in self.vars_metadata_types:
+                raise ValueError(
+                    'vars_metadata_type="{0}" not supported.'
+                    .format(self.vars_metadata_type)
+                )
+            vars_ = self.vars_metadata_types[self.vars_metadata_type](
+                text_vars
+            )
+            if not isinstance(vars_, dict):
+                raise TypeError(
+                    'Host "{0}" metadata @ {1}\n{2}\n is not a "{3}" mapping.'
+                    .format(
+                        host,
+                        self.vars_metadata_key,
+                        text_vars,
+                        self.vars_metadata_type
+                    )
+                )
+        elif not isinstance(vars_, dict):
+            raise TypeError(
+                'Host "{0}" metadata @ {1} not a mapping.'.format(host)
+            )
+        if instance.private_ip_address:
+            vars_['private_ip_address'] = instance.private_ip_address
+        return vars_
 
     # Inventory
 

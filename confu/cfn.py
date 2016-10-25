@@ -15,7 +15,6 @@ and exposed like:
     $ confu cfn --help
 
 """
-from __future__ import unicode_literals
 from collections import OrderedDict
 
 import errno
@@ -252,6 +251,10 @@ class Stack(object):
         )
 
     @classmethod
+    def from_resource(cls, resource):
+        return cls(name=resource.tags['aws:cloudformation:stack-name'])
+
+    @classmethod
     def from_summary(cls, summary):
         return cls(
             summary.stack_name,
@@ -261,6 +264,17 @@ class Stack(object):
 
     @classmethod
     def create(cls, name, template, params):
+        # expand stack outputs to params
+        tmp = []
+        for param in params:
+            if len(param) == 1:
+                for k, v in Stack(param[0]).outputs.iteritems():
+                    if k in template.params:
+                        tmp.append((k, v))
+            else:
+                tmp.append(param)
+        params = tmp
+
         # format name
         name = name or settings.cfn.stack_name_format
         name_ctx = {
@@ -312,7 +326,11 @@ class Stack(object):
             for name, value in settings.cfn.stack_tags.iteritems()
         )
         id = aws.cxn.cloudformation().create_stack(
-            stack_name=name, template_url=url, parameters=params, tags=tags
+            stack_name=name,
+            template_url=url,
+            parameters=params,
+            tags=tags,
+            capabilities=['CAPABILITY_IAM'],
         )
         return Stack(name, id=id)
 
@@ -330,6 +348,17 @@ class Stack(object):
         return self._description
 
     def update(self, template, params):
+        # expand stack outputs to params
+        tmp = []
+        for param in params:
+            if len(param) == 1:
+                for k, v in Stack(param[0]).outputs.iteritems():
+                    if k in template.params:
+                        tmp.append((k, v))
+            else:
+                tmp.append(param)
+        params = tmp
+
         # validate params
         for key, _ in params:
             if key not in self.params:
@@ -338,6 +367,14 @@ class Stack(object):
                         key, template.name
                     )
                 )
+
+        # existing params
+        for k, v in self.params.iteritems():
+            if k not in template.params:
+                continue
+            if any(key == k for key, _ in params):
+                continue
+            params.append((k, v))
 
         # environment params
         for k, v in settings.cfn.parameters.iteritems():
@@ -364,11 +401,8 @@ class Stack(object):
         )
         aws.cxn.cloudformation().update_stack(
             stack_name=self.name, template_url=url, parameters=params,
-            tags={
-                'confu:source': 's3://{bucket}/{key}'.format(
-                    bucket=ctx.bucket.name, key=ctx.key_for(template.name)
-                ),
-            }
+            tags=tags,
+            capabilities=['CAPABILITY_IAM'],
         )
 
     def delete(self):
@@ -417,6 +451,11 @@ class Stack(object):
         self._description = None
         self._id = None
         self._status = None
+
+    @property
+    def template(self):
+        body = aws.cxn.cloudformation().get_template(self.name)
+        return TemplateRendered(body)
 
 
 # cli.cfn

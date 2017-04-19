@@ -36,7 +36,6 @@ import boto.s3.key
 import click
 
 from . import settings, cli, aws
-from troposphere import awsencode
 
 
 logger = logging.getLogger(__name__)
@@ -179,11 +178,7 @@ class Template(object):
                                key=lambda x: x[0],
                                cmp=comparator))
 
-        return json.dumps(t,
-                          cls=awsencode,
-                          indent=4,
-                          sort_keys=False,
-                          separators=(', ', ': '))
+        return t.to_dict()
 
     def stack(self, name, params):
         return Stack.create(name, self, params)

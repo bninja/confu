@@ -28,8 +28,8 @@ setuptools.setup(
     platforms='any',
     install_requires=[
         'ansible >= 2,<3',
-        'boto',
-        'troposphere',
+        'boto >= 2.4.6,<3',
+        'troposphere >= 1.9.3,<2',
         'click',
         'pilo >=0.4,<0.5',
         'virtualenv',

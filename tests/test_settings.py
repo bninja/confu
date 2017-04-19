@@ -1,3 +1,5 @@
+import hashlib
+import json
 import os
 import StringIO
 
@@ -64,8 +66,12 @@ source_dir = infras/global/atlas
     request.addfinalizer(patch.stop)
 
 
+def hash_dict(d):
+    return hashlib.sha1(json.dumps(d, sort_keys=True)).hexdigest()
+
+
 def test_merge(locations):
-    assert confu.settings.load(globalize=False) == {
+    expected = {
         'atlas': {
             'source_dir': 'infras/global/atlas'
         },
@@ -120,3 +126,5 @@ def test_merge(locations):
         'profile': 'julius',
         'region': 'us-west-1'
     }
+    actual = confu.settings.load(globalize=False)
+    assert hash_dict(actual) == hash_dict(expected)

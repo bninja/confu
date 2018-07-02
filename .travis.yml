@@ -3,7 +3,7 @@ python:
 - 2.7
 env:
   global:
-    - export BOTO_CONFIG=/dev/null
+    - BOTO_CONFIG=/dev/null
 install:
 - pip install -e .[tests]
 - pip install coveralls

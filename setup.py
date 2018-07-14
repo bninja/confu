@@ -29,7 +29,7 @@ setuptools.setup(
     install_requires=[
         'ansible >= 2,<3',
         'boto >= 2.4.6,<3',
-        'troposphere >= 2,<2.1',
+        'troposphere >= 2,<3',
         'click',
         'pilo >=0.4,<0.5',
         'virtualenv',

@@ -440,13 +440,13 @@ def info(ctx):
         'patterns': list(map(str, package.patterns)),
         'stage_dir': package.stage_dir,
     }
-    print((json.dumps(info, indent=4, sort_keys=True)))
+    print(json.dumps(info, indent=4, sort_keys=True))
 
 
 @pkg.command('makefile')
 @click.pass_context
 def makefile(ctx):
-    print((ctx.parent.package.makefile))
+    print(ctx.parent.package.makefile)
 
 
 @pkg.command('manifest')
@@ -486,7 +486,7 @@ def clean(ctx):
 @click.option('-a', '--always', is_flag=True, default=False)
 @click.pass_context
 def archive(ctx, always):
-    print((ctx.parent.package.archive(always=always)))
+    print(ctx.parent.package.archive(always=always))
 
 
 @pkg.command('archived')
@@ -496,10 +496,10 @@ def archive(ctx, always):
 def archived(ctx, name, auth):
 
     def _url(key):
-        print((package.archived_url(key.name, auth)))
+        print(package.archived_url(key.name, auth))
 
     def _name(key):
-        print((key.name))
+        print(key.name)
 
     render = {
         True: _url,

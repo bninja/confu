@@ -114,7 +114,7 @@ class Template(object):
     def required(self):
         return dict(
             (name, param)
-            for name, param in list(self.params.items())
+            for name, param in self.params.items()
             if 'Default' not in param
         )
 
@@ -122,7 +122,7 @@ class Template(object):
     def defaults(self):
         return dict(
             (name, param)
-            for name, param in list(self.params.items())
+            for name, param in self.params.items()
             if 'Default' in param
         )
 
@@ -263,7 +263,7 @@ class Stack(object):
         tmp = []
         for param in params:
             if len(param) == 1:
-                for k, v in list(Stack(param[0]).outputs.items()):
+                for k, v in Stack(param[0]).outputs.items():
                     if k in template.params:
                         tmp.append((k, v))
             else:
@@ -280,11 +280,11 @@ class Stack(object):
         }
         name_ctx.update(
             (name, param['Default'])
-            for name, param in list(template.defaults.items())
+            for name, param in template.defaults.items()
         )
         name_ctx.update(
             (name, value)
-            for name, value in list(settings.cfn.parameters.items())
+            for name, value in settings.cfn.parameters.items()
         )
         name_ctx.update(params)
         logger.debug('"%s".format(%s)', name, name_ctx)
@@ -298,7 +298,7 @@ class Stack(object):
                 )
 
         # environment params
-        for k, v in list(settings.cfn.parameters.items()):
+        for k, v in settings.cfn.parameters.items():
             if k not in template.params:
                 continue
             if any(key == k for key, _ in params):
@@ -318,7 +318,7 @@ class Stack(object):
         tag_ctx = dict((name, value) for name, value in params)
         tags.update(
             ('confu:{0}'.format(name), value.format(tag_ctx))
-            for name, value in list(settings.cfn.stack_tags.items())
+            for name, value in settings.cfn.stack_tags.items()
         )
         id = aws.cxn.cloudformation().create_stack(
             stack_name=name,
@@ -347,7 +347,7 @@ class Stack(object):
         tmp = []
         for param in params:
             if len(param) == 1:
-                for k, v in list(Stack(param[0]).outputs.items()):
+                for k, v in Stack(param[0]).outputs.items():
                     if k in template.params:
                         tmp.append((k, v))
             else:
@@ -364,7 +364,7 @@ class Stack(object):
                 )
 
         # existing params
-        for k, v in list(self.params.items()):
+        for k, v in self.params.items():
             if k not in template.params:
                 continue
             if any(key == k for key, _ in params):
@@ -372,7 +372,7 @@ class Stack(object):
             params.append((k, v))
 
         # environment params
-        for k, v in list(settings.cfn.parameters.items()):
+        for k, v in settings.cfn.parameters.items():
             if k not in template.params:
                 continue
             if any(key == k for key, _ in params):
@@ -392,7 +392,7 @@ class Stack(object):
         tag_ctx = dict((name, value) for name, value in params)
         tags.update(
             ('confu:{0}'.format(name), value.format(tag_ctx))
-            for name, value in list(settings.cfn.stack_tags.items())
+            for name, value in settings.cfn.stack_tags.items()
         )
         aws.cxn.cloudformation().update_stack(
             stack_name=self.name, template_url=url, parameters=params,
@@ -471,28 +471,28 @@ def validate(template_url):
 @click.argument('template_url')
 def render(template_url):
     template = Template.from_url(template_url)
-    print((str(template)))
+    print(str(template))
 
 
 @cfn.command('params')
 @click.argument('template_url')
 def parameters(template_url):
     template = Template.from_url(template_url)
-    print((json.dumps(template.params, indent=4, sort_keys=True)))
+    print(json.dumps(template.params, indent=4, sort_keys=True))
 
 
 @cfn.command('defaults')
 @click.argument('template_url')
 def defaults(template_url):
     template = Template.from_url(template_url)
-    print((json.dumps(template.defaults, indent=4, sort_keys=True)))
+    print(json.dumps(template.defaults, indent=4, sort_keys=True))
 
 
 @cfn.command('required')
 @click.argument('template_url')
 def required(template_url):
     template = Template.from_url(template_url)
-    print((json.dumps(template.required, indent=4, sort_keys=True)))
+    print(json.dumps(template.required, indent=4, sort_keys=True))
 
 
 @cfn.command('upload')
@@ -500,14 +500,14 @@ def required(template_url):
 @click.option('--auth/--no-auth', default=False)
 def upload(template_url, auth):
     template = Template.from_url(template_url)
-    print((template.upload(auth=auth)))
+    print(template.upload(auth=auth))
 
 
 @cfn.command('uploaded')
 @click.argument('template_url')
 @click.option('--auth/--no-auth', default=False)
 def uploaded(template_url, auth):
-    print((Template.from_url(template_url).remote(auth=auth)))
+    print(Template.from_url(template_url).remote(auth=auth))
 
 
 @cfn.command('create')
@@ -519,7 +519,7 @@ def create(template_url, param, stack_name):
     template = Template.from_url(template_url)
     if not template.has_remote:
         template.upload()
-    print((template.stack(name=stack_name, params=params).name))
+    print(template.stack(name=stack_name, params=params).name)
 
 
 @cfn.command('show')
@@ -552,7 +552,7 @@ def show(stack_name, deleted):
     else:
         stack = Stack(stack_name)
         summary = _summarize(stack)
-    print((json.dumps(summary, indent=4, sort_keys=True)))
+    print(json.dumps(summary, indent=4, sort_keys=True))
 
 
 @cfn.command('wait-for')

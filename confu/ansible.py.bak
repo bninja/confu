@@ -166,7 +166,7 @@ class AWSInventory(Inventory):
 
         result = {}
 
-        for name, group in list(groups.items()):
+        for name, group in groups.items():
             if group['hosts']:
                 group['hosts'] = list(group['hosts'])
             else:
@@ -252,7 +252,7 @@ class AWSLocalInventory(AWSInventory):
                 result = self.one(host)
             else:
                 result = self.all()
-            print((json.dumps(result, indent=4, sort_keys=True)))
+            print(json.dumps(result, indent=4, sort_keys=True))
 
         return _cli
 
@@ -386,7 +386,7 @@ class AWSRemoteInventory(AWSInventory):
                 result = self.one(host)
             else:
                 result = self.all()
-            print((json.dumps(result, indent=4, sort_keys=True)))
+            print(json.dumps(result, indent=4, sort_keys=True))
 
         return _cli
 
@@ -465,7 +465,7 @@ class S3LookupModule(object):
 
     def run(self, terms, inject=None, **kwargs):
         # XXX: messes with logging
-        from . import ansible.utils
+        import ansible.utils
 
         # XXX: https://github.com/ansible/ansible/issues/7370
 

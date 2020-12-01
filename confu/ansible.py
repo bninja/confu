@@ -465,7 +465,7 @@ class S3LookupModule(object):
 
     def run(self, terms, inject=None, **kwargs):
         # XXX: messes with logging
-        from . import ansible.utils
+        from . import ansible
 
         # XXX: https://github.com/ansible/ansible/issues/7370
 

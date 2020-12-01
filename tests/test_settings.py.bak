@@ -1,7 +1,7 @@
 import hashlib
 import json
 import os
-import io
+import StringIO
 
 import mock
 import pytest
@@ -59,7 +59,7 @@ source_dir = infras/global/atlas
     request.addfinalizer(patch.stop)
 
     def _open(path, *args, **kwargs):
-        return io.StringIO(paths[path])
+        return StringIO.StringIO(paths[path])
 
     patch = mock.patch('__builtin__.open', _open, create=True)
     patch.start()

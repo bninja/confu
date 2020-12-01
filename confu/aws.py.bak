@@ -213,7 +213,7 @@ def stack_resource_metadata(resource, *args):
         ['StackResourceDetail']
     )
     v = result.get('Metadata', *args)
-    if isinstance(v, str):
+    if isinstance(v, basestring):
         v = json.loads(result['Metadata'])
     return v
 
@@ -228,7 +228,7 @@ def retry(sleep=1, max_sleep=60, max_count=10):
         while True:
             try:
                 return func(*args, **kwargs)
-            except boto.exception.BotoServerError as ex:
+            except boto.exception.BotoServerError, ex:
                 if ex.code != 'Throttling' or count == max_count:
                     raise
                 cur_sleep = min(max_sleep, sleep * (2 ** count))

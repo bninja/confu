@@ -13,7 +13,7 @@ def shell():
 @shell.command('env')
 def env():
     script_path = os.path.join(os.path.dirname(__file__), 'confue.bash')
-    print((open(script_path, 'r').read()))
+    print(open(script_path, 'r').read())
 
 
 @shell.command('complete')

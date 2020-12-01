@@ -1,4 +1,4 @@
-import configparser
+import ConfigParser
 import json
 import logging
 import os
@@ -38,7 +38,7 @@ class AWS(pilo.Form):
         if value in self.regions:
             return True
         msg = '"{0}" must be one of {1}'.format(
-            value, ', '.join(['"{0}"'.format(x) for x in self.regions])
+            value, ', '.join(map(lambda x: '"{0}"'.format(x), self.regions))
         )
         self.ctx.errors.invalid(msg)
         return False
@@ -143,10 +143,10 @@ atlas = Atlas()
 
 
 def locations():
-    return [path for path in [
+    return filter(lambda path: os.path.exists(path), [
         os.path.expanduser('~/.confu.cfg'),
         os.path.join(os.getcwd(), '.confu.cfg'),
-    ] if os.path.exists(path)]
+    ])
 
 
 def load(profile=None, region=None, globalize=True, *paths):
@@ -177,7 +177,7 @@ def load(profile=None, region=None, globalize=True, *paths):
         if not path:
             continue
         logger.debug('loading "%s"', path)
-        config = configparser.ConfigParser()
+        config = ConfigParser.ConfigParser()
         config.optionxform = str  # NOTE: preserve case
         config.read(path)
         configs.append((path, config))

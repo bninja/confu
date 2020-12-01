@@ -68,7 +68,7 @@ def cfg():
         'pkg': settings.pkg,
         'atlas': settings.atlas,
     }
-    print((json.dumps(summary, indent=4, sort_keys=True)))
+    print(json.dumps(summary, indent=4, sort_keys=True))
 
 
 class ImportAtlas(object):

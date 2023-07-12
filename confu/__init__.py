@@ -6,7 +6,7 @@ Helpers for using these infrastructure tools:
 - `ansible <http://docs.ansible.com/>`_
 
 """
-__version__ = '0.1.8'
+__version__ = '0.1.11'
 
 __all__ = [
     'ansible',
